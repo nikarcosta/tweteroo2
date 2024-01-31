@@ -4,19 +4,41 @@ const server = express();
 server.use(express.json());
 
 let users = [];
+let tweets = [];
 
 server.post("/sign-up", (req, res) => {
-  let userName = req.body.username;
-  let userAvatar = req.body.avatar;
+  let username = req.body.username;
+  let useravatar = req.body.avatar;
 
-  if (userName === "" || userAvatar === "") {
-    res.send("Preencha todos os campos!");
+  if (username === "" || useravatar === "") {
+    return res.send("Preencha todos os campos!");
   }
 
-  let userInfo = { userName, userAvatar };
+  let userInfo = { username, useravatar };
   users.push(userInfo);
+  console.log(users);
 
-  res.send(users);
+  return res.send("Created!");
+});
+
+server.post("/tweets", (req, res) => {
+  const username = req.body.username;
+  const usertweet = req.body.tweet;
+
+  const isSignedUp = users.find((user) => {
+    return user.username === username;
+  });
+
+  if (!isSignedUp) {
+    console.log(isSignedUp);
+    return res.send("UNAUTHORIZED!");
+  }
+
+  const tweet = { username, usertweet };
+
+  tweets.push(tweet);
+
+  return res.send("OK!");
 });
 
 const PORT = 5000;
