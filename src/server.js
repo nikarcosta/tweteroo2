@@ -8,13 +8,13 @@ let tweets = [];
 
 server.post("/sign-up", (req, res) => {
   let username = req.body.username;
-  let useravatar = req.body.avatar;
+  let avatar = req.body.avatar;
 
-  if (username === "" || useravatar === "") {
+  if (username === "" || avatar === "") {
     return res.send("Preencha todos os campos!");
   }
 
-  let userInfo = { username, useravatar };
+  let userInfo = { username, avatar };
   users.push(userInfo);
   console.log(users);
 
@@ -23,7 +23,7 @@ server.post("/sign-up", (req, res) => {
 
 server.post("/tweets", (req, res) => {
   const username = req.body.username;
-  const usertweet = req.body.tweet;
+  const tweet = req.body.tweet;
 
   const isSignedUp = users.find((user) => {
     return user.username === username;
@@ -34,11 +34,28 @@ server.post("/tweets", (req, res) => {
     return res.send("UNAUTHORIZED!");
   }
 
-  const tweet = { username, usertweet };
+  const userTweet = { username, tweet };
 
-  tweets.push(tweet);
+  console.log(userTweet);
+
+  tweets.push(userTweet);
 
   return res.send("OK!");
+});
+
+server.get("/tweets", (req, res) => {
+  const usersTweets = tweets.map((tweet) => {
+    const userInfo = users.find((user) => user.username === tweet.username);
+    return {
+      username: tweet.username,
+      avatar: userInfo.avatar,
+      tweet: tweet.tweet,
+    };
+  });
+
+  if (usersTweets.length <= 10) return res.send(usersTweets.reverse());
+
+  return res.send(usersTweets.reverse().slice(0, 10));
 });
 
 const PORT = 5000;
