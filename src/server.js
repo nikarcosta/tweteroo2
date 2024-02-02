@@ -20,10 +20,10 @@ const tweetSchema = joi.object({
 });
 
 server.post("/sign-up", (req, res) => {
-  let username = req.body.username;
-  let avatar = req.body.avatar;
+  const username = req.body.username;
+  const avatar = req.body.avatar;
 
-  let userInfo = { username, avatar };
+  const userInfo = { username, avatar };
   const validation = userSchema.validate(userInfo, { abortEarly: false });
 
   if (validation.error) {
@@ -33,7 +33,7 @@ server.post("/sign-up", (req, res) => {
 
   users.push(userInfo);
 
-  return res.send("Created!");
+  return res.status(201).send("Created!");
 });
 
 server.post("/tweets", (req, res) => {
@@ -45,17 +45,21 @@ server.post("/tweets", (req, res) => {
   });
 
   if (!isSignedUp) {
-    console.log(isSignedUp);
-    return res.send("UNAUTHORIZED!");
+    return res.status(401).send("UNAUTHORIZED!");
   }
 
   const userTweet = { username, tweet };
 
-  console.log(userTweet);
+  const validation = tweetSchema.validate(userTweet, { abortEarly: false });
+
+  if (validation.error) {
+    const errors = validation.error.details.map((detail) => detail.message);
+    return res.status(422).send(errors);
+  }
 
   tweets.push(userTweet);
 
-  return res.send("OK!");
+  return res.status(201).send("OK!");
 });
 
 server.get("/tweets", (req, res) => {
