@@ -74,7 +74,7 @@ server.get("/tweets", (req, res) => {
 
   if (usersTweets.length <= 10) return res.send(usersTweets.reverse());
 
-  return res.send(usersTweets.reverse().slice(0, 10));
+  return res.status(200).send(usersTweets.reverse().slice(0, 10));
 });
 
 server.get("/tweets/:username", (req, res) => {
@@ -91,7 +91,9 @@ server.get("/tweets/:username", (req, res) => {
       };
     });
 
-  return res.send(userTweets);
+  if (userTweets.length <= 10) return res.send(userTweets.reverse());
+
+  res.status(200).send(userTweets.reverse().slice(0, 10));
 });
 
 const PORT = 5000;
