@@ -61,16 +61,18 @@ server.get("/tweets", (req, res) => {
 server.get("/tweets/:username", (req, res) => {
   const username = req.params.username;
 
-  const userTweets = tweets.filter((tweet) => {
-    if (tweet.username === username) {
+  const userTweets = tweets
+    .filter((tweet) => tweet.username === username)
+    .map((tweet) => {
       const userInfo = users.find((user) => user.username === tweet.username);
-      console.log(userInfo);
-      return { ...tweet, avatar: userInfo.avatar };
-    }
-  });
+      return {
+        username: tweet.username,
+        tweet: tweet.tweet,
+        avatar: userInfo.avatar,
+      };
+    });
 
   return res.send(userTweets);
-  //WHY ISN'T RETURNING THE USER'S AVATAR?
 });
 
 const PORT = 5000;
