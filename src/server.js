@@ -1,22 +1,37 @@
 import express from "express";
+import cors from "cors";
+import joi from "joi";
 
 const server = express();
+server.use(cors());
 server.use(express.json());
 
 let users = [];
 let tweets = [];
 
+const userSchema = joi.object({
+  username: joi.string().required().min(3),
+  avatar: joi.string().required(),
+});
+
+const tweetSchema = joi.object({
+  username: joi.string().required(),
+  tweet: joi.string().required(),
+});
+
 server.post("/sign-up", (req, res) => {
   let username = req.body.username;
   let avatar = req.body.avatar;
 
-  if (username === "" || avatar === "") {
-    return res.send("Preencha todos os campos!");
+  let userInfo = { username, avatar };
+  const validation = userSchema.validate(userInfo, { abortEarly: false });
+
+  if (validation.error) {
+    const errors = validation.error.details.map((detail) => detail.message);
+    return res.status(422).send(errors);
   }
 
-  let userInfo = { username, avatar };
   users.push(userInfo);
-  console.log(users);
 
   return res.send("Created!");
 });
