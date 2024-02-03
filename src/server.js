@@ -78,19 +78,29 @@ server.post("/tweets", async (req, res) => {
   }
 });
 
-server.get("/tweets", (req, res) => {
-  const usersTweets = tweets.map((tweet) => {
-    const userInfo = users.find((user) => user.username === tweet.username);
-    return {
-      username: tweet.username,
-      avatar: userInfo.avatar,
-      tweet: tweet.tweet,
-    };
-  });
+server.get("/tweets", async (req, res) => {
+  try {
+    const tweets = await db.collection("tweets").find().toArray();
+    if (!tweets) return res.status(401).send([]);
 
-  if (usersTweets.length <= 10) return res.send(usersTweets.reverse());
+    const users = await db.collection("users").find().toArray();
+    if (!users) return res.status(401).send([]);
 
-  return res.status(200).send(usersTweets.reverse().slice(0, 10));
+    const usersTweets = tweets.map((tweet) => {
+      const userInfo = users.find((user) => user.username === tweet.username);
+      return {
+        username: tweet.username,
+        avatar: userInfo.avatar,
+        tweet: tweet.tweet,
+      };
+    });
+
+    if (usersTweets.length <= 10) return res.send(usersTweets.reverse());
+
+    return res.status(200).send(usersTweets.reverse().slice(0, 10));
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 });
 
 server.get("/tweets/:username", (req, res) => {
