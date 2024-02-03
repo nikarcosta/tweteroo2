@@ -16,15 +16,6 @@ mongoClient.connect().then(() => {
   db = mongoClient.db("twettero");
 });
 
-let users = [
-  {
-    username: "bob",
-    avatar:
-      "https://super.abril.com.br/wp-content/uploads/2020/09/04-09_gato_SITE.jpg?quality=70&strip=info",
-  },
-];
-let tweets = [];
-
 const userSchema = joi.object({
   username: joi.string().required().min(3),
   avatar: joi.string().required(),
@@ -49,8 +40,8 @@ server.post("/sign-up", async (req, res) => {
   }
 
   try {
-    const resp = await db.collection("users").findOne({ username });
-    if (resp) return res.status(422).send("User already exists!");
+    const userExists = await db.collection("users").findOne({ username });
+    if (userExists) return res.status(422).send("User already exists!");
 
     await db.collection("users").insertOne({ username, avatar });
 
@@ -60,21 +51,12 @@ server.post("/sign-up", async (req, res) => {
   }
 });
 
-server.post("/tweets", (req, res) => {
+server.post("/tweets", async (req, res) => {
   //const username = req.body.username;
   //const tweet = req.body.tweet;
   const { username, tweet } = req.body;
 
-  const isSignedUp = users.find((user) => {
-    return user.username === username;
-  });
-
-  if (!isSignedUp) {
-    return res.status(401).send("UNAUTHORIZED!");
-  }
-
   const userTweet = { username, tweet };
-  console.log(userTweet);
 
   const validation = tweetSchema.validate(userTweet, { abortEarly: false });
 
@@ -83,9 +65,17 @@ server.post("/tweets", (req, res) => {
     return res.status(422).send(errors);
   }
 
-  tweets.push(userTweet);
+  try {
+    const userExists = await db.collection("users").findOne({ username });
+    if (!userExists)
+      return res.status(404).send("UNAUTHORIZED!User doesn't exist!");
 
-  return res.status(201).send("OK!");
+    await db.collection("tweets").insertOne({ username, tweet });
+
+    return res.status(201).send("Ok!");
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 });
 
 server.get("/tweets", (req, res) => {
