@@ -1,12 +1,28 @@
 import express from "express";
 import cors from "cors";
 import joi from "joi";
+import { MongoClient } from "mongodb";
+import dotenv from "dotenv";
+dotenv.config();
 
 const server = express();
 server.use(cors());
 server.use(express.json());
 
-let users = [];
+const mongoClient = new MongoClient(process.env.MONGO_URI);
+let db;
+
+mongoClient.connect().then(() => {
+  db = mongoClient.db("twettero");
+});
+
+let users = [
+  {
+    username: "bob",
+    avatar:
+      "https://super.abril.com.br/wp-content/uploads/2020/09/04-09_gato_SITE.jpg?quality=70&strip=info",
+  },
+];
 let tweets = [];
 
 const userSchema = joi.object({
@@ -19,9 +35,10 @@ const tweetSchema = joi.object({
   tweet: joi.string().required(),
 });
 
-server.post("/sign-up", (req, res) => {
-  const username = req.body.username;
-  const avatar = req.body.avatar;
+server.post("/sign-up", async (req, res) => {
+  //const username = req.body.username;
+  //const avatar = req.body.avatar;
+  const { username, avatar } = req.body;
 
   const userInfo = { username, avatar };
   const validation = userSchema.validate(userInfo, { abortEarly: false });
@@ -31,14 +48,22 @@ server.post("/sign-up", (req, res) => {
     return res.status(422).send(errors);
   }
 
-  users.push(userInfo);
+  try {
+    const resp = await db.collection("users").findOne({ username });
+    if (resp) return res.status(422).send("User already exists!");
 
-  return res.status(201).send("Created!");
+    await db.collection("users").insertOne({ username, avatar });
+
+    return res.status(201).send("Created!");
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 });
 
 server.post("/tweets", (req, res) => {
-  const username = req.body.username;
-  const tweet = req.body.tweet;
+  //const username = req.body.username;
+  //const tweet = req.body.tweet;
+  const { username, tweet } = req.body;
 
   const isSignedUp = users.find((user) => {
     return user.username === username;
@@ -49,6 +74,7 @@ server.post("/tweets", (req, res) => {
   }
 
   const userTweet = { username, tweet };
+  console.log(userTweet);
 
   const validation = tweetSchema.validate(userTweet, { abortEarly: false });
 
