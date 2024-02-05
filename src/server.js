@@ -110,16 +110,15 @@ server.get("/tweets/:username", async (req, res) => {
     const tweets = await db.collection("tweets").find({ username }).toArray();
     if (!tweets) return res.status(404).send([]);
 
-    const userInfo = await db.collection("users").find({ username }).toArray();
-    console.log(userInfo);
+    const userInfo = await db.collection("users").findOne({ username });
 
-    if (!userInfo || userInfo.length === 0) return res.status(404).send([]);
+    if (!userInfo) return res.status(404).send([]);
 
     const userTweets = tweets.map((tweet) => {
       return {
         username: tweet.username,
         tweet: tweet.tweet,
-        avatar: userInfo[0].avatar,
+        avatar: userInfo.avatar,
       };
     });
 
