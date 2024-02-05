@@ -103,23 +103,32 @@ server.get("/tweets", async (req, res) => {
   }
 });
 
-server.get("/tweets/:username", (req, res) => {
+server.get("/tweets/:username", async (req, res) => {
   const username = req.params.username;
 
-  const userTweets = tweets
-    .filter((tweet) => tweet.username === username)
-    .map((tweet) => {
-      const userInfo = users.find((user) => user.username === tweet.username);
+  try {
+    const tweets = await db.collection("tweets").find({ username }).toArray();
+    if (!tweets) return res.status(404).send([]);
+
+    const userInfo = await db.collection("users").find({ username }).toArray();
+    console.log(userInfo);
+
+    if (!userInfo || userInfo.length === 0) return res.status(404).send([]);
+
+    const userTweets = tweets.map((tweet) => {
       return {
         username: tweet.username,
         tweet: tweet.tweet,
-        avatar: userInfo.avatar,
+        avatar: userInfo[0].avatar,
       };
     });
 
-  if (userTweets.length <= 10) return res.send(userTweets.reverse());
+    if (userTweets.length <= 10) return res.send(userTweets.reverse());
 
-  res.status(200).send(userTweets.reverse().slice(0, 10));
+    res.status(200).send(userTweets.reverse().slice(0, 10));
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
 });
 
 const PORT = 5000;
