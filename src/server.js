@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import joi from "joi";
 import { MongoClient } from "mongodb";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -18,6 +19,7 @@ mongoClient.connect().then(() => {
 
 const userSchema = joi.object({
   username: joi.string().required().min(3),
+  password: joi.string().required().min(6),
   avatar: joi.string().required(),
 });
 
@@ -27,11 +29,14 @@ const tweetSchema = joi.object({
 });
 
 server.post("/sign-up", async (req, res) => {
-  //const username = req.body.username;
-  //const avatar = req.body.avatar;
-  const { username, avatar } = req.body;
+  const { username, password, avatar } = req.body;
 
-  const userInfo = { username, avatar };
+  const userInfo = {
+    username,
+    password,
+    avatar,
+  };
+
   const validation = userSchema.validate(userInfo, { abortEarly: false });
 
   if (validation.error) {
@@ -43,7 +48,13 @@ server.post("/sign-up", async (req, res) => {
     const userExists = await db.collection("users").findOne({ username });
     if (userExists) return res.status(422).send("User already exists!");
 
-    await db.collection("users").insertOne({ username, avatar });
+    const passwordHash = bcrypt.hashSync(password, 10);
+
+    await db.collection("users").insertOne({
+      username,
+      password: passwordHash,
+      avatar,
+    });
 
     return res.status(201).send("Created!");
   } catch (err) {
