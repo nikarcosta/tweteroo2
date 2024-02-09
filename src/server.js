@@ -28,6 +28,11 @@ const tweetSchema = joi.object({
   tweet: joi.string().required(),
 });
 
+const loginSchema = joi.object({
+  username: joi.string().required(),
+  password: joi.string().required(),
+});
+
 server.post("/sign-up", async (req, res) => {
   const { username, password, avatar } = req.body;
 
@@ -59,6 +64,32 @@ server.post("/sign-up", async (req, res) => {
     return res.status(201).send("Created!");
   } catch (err) {
     return res.status(500).send(err.message);
+  }
+});
+
+server.post("/sign-in", async (req, res) => {
+  const { username, password } = req.body;
+
+  const userLogin = { username, password };
+
+  const validation = loginSchema.validate(userLogin, { abortEarly: false });
+
+  if (validation.error) {
+    const errors = validation.error.details.map((detail) => detail.message);
+    return res.status(422).send(errors);
+  }
+
+  try {
+    const userExists = await db.collection("users").findOne({ username });
+    if (!userExists) return res.status(404).send("User doesn't exist!");
+
+    if (userExists && bcrypt.compare(password, userExists.password)) {
+      return res.status(200).send("Welcome back!");
+    } else {
+      return res.status(401).send("Invalid username or password!");
+    }
+  } catch (err) {
+    return req.status(500).send(err.message);
   }
 });
 
