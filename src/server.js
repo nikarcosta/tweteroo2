@@ -18,6 +18,7 @@ mongoClient.connect().then(() => {
 });
 
 const userSchema = joi.object({
+  email: joi.string().email().required(),
   username: joi.string().required().min(3),
   password: joi.string().required().min(6),
   avatar: joi.string().required(),
@@ -34,9 +35,10 @@ const loginSchema = joi.object({
 });
 
 server.post("/sign-up", async (req, res) => {
-  const { username, password, avatar } = req.body;
+  const { email, username, password, avatar } = req.body;
 
   const userInfo = {
+    email,
     username,
     password,
     avatar,
@@ -50,18 +52,27 @@ server.post("/sign-up", async (req, res) => {
   }
 
   try {
-    const userExists = await db.collection("users").findOne({ username });
-    if (userExists) return res.status(422).send("User already exists!");
+    const userExists = await db
+      .collection("users")
+      .findOne({ $or: [{ username }, { email }] });
+    if (userExists) {
+      if (userExists.username === userInfo.username) {
+        return res.status(404).send("Username already exists!");
+      } else {
+        return res.status(404).send("Email is already in use!");
+      }
+    }
 
     const passwordHash = bcrypt.hashSync(password, 10);
 
     await db.collection("users").insertOne({
-      username,
+      email: userInfo.email,
+      username: userInfo.username,
       password: passwordHash,
-      avatar,
+      avatar: userInfo.avatar,
     });
 
-    return res.status(201).send("Created!");
+    return res.status(201).send("User created successfully!");
   } catch (err) {
     return res.status(500).send(err.message);
   }
