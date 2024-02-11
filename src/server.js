@@ -114,9 +114,15 @@ server.post("/sign-in", async (req, res) => {
 });
 
 server.post("/tweets", async (req, res) => {
-  //const username = req.body.username;
-  //const tweet = req.body.tweet;
   const { username, tweet } = req.body;
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
+
+  if (!token) return res.status(404).send("Token missing!");
+
+  const session = await db.collection("sessions").findOne({ token });
+
+  if (!session) return res.sendStatus(401);
 
   const userTweet = { username, tweet };
 
