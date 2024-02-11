@@ -3,6 +3,7 @@ import cors from "cors";
 import joi from "joi";
 import { MongoClient } from "mongodb";
 import bcrypt from "bcrypt";
+import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -95,7 +96,15 @@ server.post("/sign-in", async (req, res) => {
     if (!userExists) return res.status(404).send("User doesn't exist!");
 
     if (userExists && bcrypt.compare(password, userExists.password)) {
-      return res.status(200).send("Welcome back!");
+      const token = uuid();
+
+      await db
+        .collection("sessions")
+        .insertOne({ userId: userExists._id, token });
+
+      const response = { message: "Welcome back", token };
+
+      return res.status(200).send(response);
     } else {
       return res.status(401).send("Invalid username or password!");
     }
