@@ -147,6 +147,15 @@ server.post("/tweets", async (req, res) => {
 });
 
 server.get("/tweets", async (req, res) => {
+  const { authorization } = req.headers;
+  const token = authorization?.replace("Bearer ", "");
+
+  if (!token) return res.status(404).send("Token missing!");
+
+  const session = await db.collection("sessions").findOne({ token });
+
+  if (!session) return res.sendStatus(401);
+
   try {
     const tweets = await db.collection("tweets").find().toArray();
     if (!tweets) return res.status(401).send([]);
