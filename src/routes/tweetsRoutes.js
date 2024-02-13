@@ -2,20 +2,21 @@ import {
   postTweets,
   getTweets,
   getTweetsByUsername,
-} from "../controllers/tweetsController";
+} from "../controllers/tweetsController.js";
 import { Router } from "express";
-import { validateSchema, authMiddleware } from "../middlewares";
-import { tweetSchema } from "../schemas/tweetsSchema";
+import { validateSchema } from "../middlewares/validateSchema.js";
+import { authValidation } from "../middlewares/authMiddleware.js";
+import { tweetSchema } from "../schemas/tweetsSchema.js";
 
 const tweetsRouter = Router();
 
 tweetsRouter.post(
   "/tweets",
   validateSchema(tweetSchema),
-  authMiddleware,
+  authValidation,
   postTweets
 );
-tweetsRouter.get("/tweets", authMiddleware, getTweets);
-tweetsRouter.get("/tweets/:username", authMiddleware, getTweetsByUsername);
+tweetsRouter.get("/tweets", authValidation, getTweets);
+tweetsRouter.get("/tweets/:username", authValidation, getTweetsByUsername);
 
 export default tweetsRouter;
