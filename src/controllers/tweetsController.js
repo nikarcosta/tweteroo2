@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import db from "../config/database.js";
 
 export async function postTweets(req, res) {
@@ -64,6 +65,24 @@ export async function getTweetsByUsername(req, res) {
 
     res.status(200).send(userTweets.reverse().slice(0, 10));
   } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}
+
+export async function deleteTweets(req, res) {
+  const { id } = req.params;
+
+  try {
+    const result = await db
+      .collection("tweets")
+      .deleteOne({ _id: ObjectId.createFromHexString(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send("Tweet not found!");
+    }
+    return res.status(202).send("Tweet deleted successfully!");
+  } catch (err) {
+    console.error("Error deleting tweet:", err);
     return res.status(500).send(err.message);
   }
 }
