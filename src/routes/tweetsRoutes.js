@@ -18,5 +18,6 @@ tweetsRouter.post(
 );
 tweetsRouter.get("/tweets", authValidation, getTweets);
 tweetsRouter.get("/tweets/:username", authValidation, getTweetsByUsername);
+tweetsRouter.post("/tweets", authValidation, postTweets);
 
 export default tweetsRouter;
