@@ -86,3 +86,25 @@ export async function deleteTweets(req, res) {
     return res.status(500).send(err.message);
   }
 }
+
+export async function updateTweets(req, res) {
+  const { id } = req.params;
+
+  try {
+    const tweet = await db
+      .collection("tweets")
+      .findOne({ _id: ObjectId.createFromHexString(id) });
+
+    if (!tweet) {
+      return res.status(404).send("Tweet not found!");
+    }
+
+    await db
+      .collection("tweets")
+      .updateOne({ _id: ObjectId.createFromHexString(id) }, { $set: req.body });
+
+    return res.status(200).send("Tweet updated successfully!");
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+}

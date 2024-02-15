@@ -3,6 +3,7 @@ import {
   getTweets,
   getTweetsByUsername,
   deleteTweets,
+  updateTweets,
 } from "../controllers/tweetsController.js";
 import { Router } from "express";
 import { validateSchema } from "../middlewares/validateSchema.js";
@@ -21,5 +22,6 @@ tweetsRouter.get("/tweets", authValidation, getTweets);
 tweetsRouter.get("/tweets/:username", authValidation, getTweetsByUsername);
 tweetsRouter.post("/tweets", authValidation, postTweets);
 tweetsRouter.delete("/tweets/:id", authValidation, deleteTweets);
+tweetsRouter.put("/tweets/:id", authValidation, updateTweets);
 
 export default tweetsRouter;
